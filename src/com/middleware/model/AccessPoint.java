@@ -135,21 +135,19 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		{
 			while(iter.hasNext())
 			{
-				String s = null;
+				String address = iter.next().split(":")[0];
+				InetAddress nodeAddress = InetAddress.getByName(address);
 				
-				Runtime runtime = Runtime.getRuntime();
-			    Process proc = runtime.exec("ping -c 1   " + iter.next().split(":")[0]);
-			    
-			    proc.waitFor();
-			    BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-			    
-
-			    // read the output from the command
-			    //Log.d("better", "Here is the standard output of the command");
-			    while ((s = stdInput.readLine()) != null)
-			    {
-			      //Log.d("better", s);
-			    }
+				boolean reacheable = nodeAddress.isReachable(Constants.PING_TIMEOUT);
+				
+				if(!reacheable)
+				{
+					/*
+					 * If a node is not reachable 
+					 * simple remove the node from the table and
+					 * notify the rest of the nodes
+					 */
+				}
 			}
 			
 		}
@@ -203,6 +201,10 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 				MiddlewarePacket packet = new MiddlewarePacket();
 				byte [] header_p = {(byte)Constants.TABLE_DATA};
 				
+				/*
+				 * Remove the senders address and 
+				 * send the rest
+				 */
 				HashMap<String, NodeState> temp = this.table.routingTable;
 				String id = address.toString().replace("/", "");
 				id = id + ":" +new Integer(port).toString();

@@ -21,4 +21,7 @@ public class Constants {
 	public static final int MAX_PROCESSOR_SPEED = 6;
 	public static final int MAX_MEMORY = 10000000;
 	
+	
+	public static final int PING_TIMEOUT = 2000;
+	
 }
