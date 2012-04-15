@@ -23,7 +23,7 @@ public class Node {
 	protected byte[] buffer;
 	protected byte [] result;
 	
-	private DataReceived dataReceived;
+	protected DataReceived dataReceived;
 	private NotifyAccessPoint notifyAccessPoint;
 	private CreatePermanetAccessPoint createPermanetAccessPoint;
 	private NewAccessPoint newAccessPoint;

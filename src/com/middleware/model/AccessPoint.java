@@ -1,7 +1,5 @@
 package com.middleware.model;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.HashMap;
@@ -16,6 +14,8 @@ import com.middleware.listeners.TempAPToNew;
 
 public class AccessPoint extends Node implements NotifyAccessPoint{
 
+	private boolean monitor = true;
+	
 	protected RoutingTable table = null;
 	
 	private CreatePermanetAccessPoint createPermanetAccessPoint;
@@ -29,6 +29,29 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		//Log.d("better", "access point is listening...");
 		this.setNotifyAccessPoint(this);
 		table = new RoutingTable();
+		
+		/* Start monitoring the network
+		 * 
+		 */
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				while(monitor)
+				{
+					try
+					{
+						checkNetworkStatus();
+						Thread.sleep(Constants.MONITOR_PERIOD);
+					}
+					catch(Exception e)
+					{
+						e.printStackTrace();
+					}
+				}
+			}
+		}).start();
 	}
 	
 
@@ -125,36 +148,51 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		return 0.6*(battery/Constants.MAX_BATTERY) + 0.25*(processor/Constants.MAX_PROCESSOR_SPEED) +0.15*(memory/Constants.MAX_MEMORY);
 	}
 	
-	public void checkNetworkStatus()
+	/*
+	 * This function should be called 
+	 * quite often to check the status of the network.
+	 * Create A thread on node initialization and call this method 
+	 * according to the time constant.
+	 */
+	private void checkNetworkStatus()
 	{
 		Set<String> nodes = table.routingTable.keySet();
 		
-		Iterator<String> iter = nodes.iterator();
-		
-		try
+		if(!nodes.isEmpty())
 		{
-			while(iter.hasNext())
+			try
 			{
-				String address = iter.next().split(":")[0];
-				InetAddress nodeAddress = InetAddress.getByName(address);
+				Iterator<String> iter = nodes.iterator();
 				
-				boolean reacheable = nodeAddress.isReachable(Constants.PING_TIMEOUT);
+				boolean reacheable;
+				InetAddress nodeAddress;
 				
-				if(!reacheable)
+				while(iter.hasNext())
 				{
-					/*
-					 * If a node is not reachable 
-					 * simple remove the node from the table and
-					 * notify the rest of the nodes
-					 */
+					String address[] = iter.next().split(":");
+					nodeAddress = InetAddress.getByName(address[0]);
+					
+					reacheable = nodeAddress.isReachable(Constants.PING_TIMEOUT);
+					
+					if(!reacheable)
+					{
+						/*
+						 * If a node is not reachable 
+						 * simple remove the node from the table and
+						 * notify the rest of the nodes
+						 */
+						this.table.removeNode(address[0]);
+						this.dataReceived.tableStatus(false, new Node(new Integer(address[1]), nodeAddress));
+					}
 				}
+				
 			}
-			
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
 		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
-		}
+		
 	}
 	
     @Override
@@ -183,8 +221,16 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			String address_n = address.toString().substring(1, address.toString().length());
 			
 			Node node = new Node(port, address);
-			this.addressTable.nodeAdded(node);
 			this.addNodeToTable(address_n+":"+String.valueOf(port), nodeState);
+			
+			/*
+			 * Listener for the access point activity
+			 */
+			this.addressTable.nodeAdded(node);
+			/*
+			 * to notify other clients
+			 */
+			this.dataReceived.tableStatus(true, node);
 			this.number++;
 			
 		}
@@ -271,6 +317,16 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			
 		}
 	}
+    
+    public void setMonitor(boolean monitor)
+    {
+    	this.monitor = monitor;
+    }
+    
+    public boolean getMonitor()
+    {
+    	return this.monitor;
+    }
     
 	@Override
 	public String toString() {

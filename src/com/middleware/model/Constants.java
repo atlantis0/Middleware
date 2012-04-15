@@ -24,4 +24,6 @@ public class Constants {
 	
 	public static final int PING_TIMEOUT = 2000;
 	
+	public static final int MONITOR_PERIOD = 15000;
+	
 }
