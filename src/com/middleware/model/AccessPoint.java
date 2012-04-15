@@ -11,7 +11,6 @@ import com.middleware.listeners.CreatePermanetAccessPoint;
 import com.middleware.listeners.NotifyAccessPoint;
 import com.middleware.listeners.TempAPToNew;
 
-
 public class AccessPoint extends Node implements NotifyAccessPoint{
 
 	private boolean monitor = true;
@@ -21,7 +20,6 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	private CreatePermanetAccessPoint createPermanetAccessPoint;
 	private TempAPToNew tempToNew;
 	private AddressTable addressTable;
-	
 	
 	public AccessPoint(NodeState state, int port) throws SocketException {
 		
@@ -165,11 +163,15 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 				Iterator<String> iter = nodes.iterator();
 				
 				boolean reacheable;
-				InetAddress nodeAddress;
+				InetAddress nodeAddress = null;
+				String address[] = null;
+				String unreachableAddresses = "";
+				
+				int count = 0;
 				
 				while(iter.hasNext())
 				{
-					String address[] = iter.next().split(":");
+					address = iter.next().split(":");
 					nodeAddress = InetAddress.getByName(address[0]);
 					
 					reacheable = nodeAddress.isReachable(Constants.PING_TIMEOUT);
@@ -181,10 +183,26 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 						 * simple remove the node from the table and
 						 * notify the rest of the nodes
 						 */
-						this.table.removeNode(address[0]);
-						this.dataReceived.tableStatus(false, new Node(new Integer(address[1]), nodeAddress));
+						String remove = address[0]+":"+String.valueOf(address[1]);
+						this.removeNodeFromTable(remove);
+						unreachableAddresses += (remove + ",");
+						count++;
 					}
 				}
+				
+				/*
+				 * There is at least one node
+				 * which is not available!
+				 */
+				if(count != 0)
+				{
+					MiddlewarePacket packet = new MiddlewarePacket();
+					byte [] header = {(byte)Constants.DISCONNECTED};
+					packet.setPacketData(header, unreachableAddresses.getBytes());
+					
+					broadCastCommand(packet);
+				}
+				
 				
 			}
 			catch(Exception e)
@@ -193,6 +211,29 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			}
 		}
 		
+	}
+	
+	private void broadCastCommand(MiddlewarePacket packet)
+	{
+		Set<String> nodes = table.routingTable.keySet();
+		Iterator<String> iter = nodes.iterator();
+		
+		String address[] = null;
+		InetAddress nodeAddress = null;
+		
+		while(iter.hasNext())
+		{
+			try
+			{
+				address = iter.next().split(":");
+				nodeAddress = InetAddress.getByName(address[0]);
+				this.sendData(packet, nodeAddress, new Integer(address[1]));
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
 	}
 	
     @Override
@@ -221,7 +262,8 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			String address_n = address.toString().substring(1, address.toString().length());
 			
 			Node node = new Node(port, address);
-			this.addNodeToTable(address_n+":"+String.valueOf(port), nodeState);
+			String key = address_n+":"+String.valueOf(port);
+			this.addNodeToTable(key, nodeState);
 			
 			/*
 			 * Listener for the access point activity
@@ -230,15 +272,24 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			/*
 			 * to notify other clients
 			 */
-			this.dataReceived.tableStatus(true, node);
+			MiddlewarePacket packet = new MiddlewarePacket();
+			byte [] packetHeader = {(byte)Constants.NEW_NODE};
+			packet.setPacketData(packetHeader, key.getBytes());
+			broadCastCommand(packet);
+
 			this.number++;
 			
 		}
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.LEAVING)))
 		{
-			this.table.removeNode(address.toString().replace("/", ""));
-			this.dataReceived.tableStatus(false, new Node(port, address));
+			String key = address.toString().replace("/", "")+":"+String.valueOf(port);
+			this.removeNodeFromTable(key);
+			
+			MiddlewarePacket packet = new MiddlewarePacket();
+			byte [] packetHeader = {(byte)Constants.DISCONNECTED};
+			packet.setPacketData(packetHeader, key.getBytes());
+			broadCastCommand(packet);
 		}
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.CREATE_PERMANENT_AP)))
