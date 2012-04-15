@@ -235,6 +235,12 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			
 		}
 		
+		else if(receivedHeader.equals(String.valueOf(Constants.LEAVING)))
+		{
+			this.table.removeNode(address.toString().replace("/", ""));
+			this.dataReceived.tableStatus(false, new Node(port, address));
+		}
+		
 		else if(receivedHeader.equals(String.valueOf(Constants.CREATE_PERMANENT_AP)))
 		{
 			this.createPermanetAccessPoint.accessPointCreated(true, address, port, number);

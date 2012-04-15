@@ -9,6 +9,7 @@ public class Constants {
 	public static final char CONNECT_TO_NEW_AP = 'E';
 	public static final char REQUEST_TABLE = 'F';
 	public static final char TABLE_DATA = 'G';
+	public static final char LEAVING = 'H';
 	
 	public static final char DATA = 'D';
 

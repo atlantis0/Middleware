@@ -82,6 +82,10 @@ public class Node {
 	    				{
 	    					notifyAccessPoint.accessPointReceivedData(result, inPacket.getAddress(), inPacket.getPort());
 	    				}
+	    				if(receivedHeader.equals(String.valueOf(Constants.LEAVING)))
+	    				{
+	    					notifyAccessPoint.accessPointReceivedData(result, inPacket.getAddress(), inPacket.getPort());
+	    				}
 	    				else if(receivedHeader.equals(String.valueOf(Constants.CREATE_PERMANENT_AP)))
 	    				{
 	    					createPermanetAccessPoint.accessPointCreated(true, address, port, number);
