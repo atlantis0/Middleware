@@ -140,12 +140,6 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		
 	}
 
-
-	private double evaluateNode(double battery, double processor, double memory)
-	{
-		return 0.6*(battery/Constants.MAX_BATTERY) + 0.25*(processor/Constants.MAX_PROCESSOR_SPEED) +0.15*(memory/Constants.MAX_MEMORY);
-	}
-	
 	/*
 	 * This function should be called 
 	 * quite often to check the status of the network.
@@ -212,6 +206,18 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		}
 		
 	}
+	
+
+	private double evaluateNode(double battery, double processor, double memory)
+	{
+		//normalize data
+		battery = (battery - Constants.MIN_BATTERY)/(Constants.MAX_BATTERY-Constants.MIN_BATTERY);
+		processor = (processor - Constants.MIN_PROCESSOR_SPEED)/(Constants.MAX_PROCESSOR_SPEED-Constants.MIN_PROCESSOR_SPEED);
+		memory = (memory - Constants.MIN_MEMORY)/(Constants.MAX_MEMORY-Constants.MIN_MEMORY);
+		
+		return 0.6*battery + 0.25*processor +0.15*memory;
+	}
+	
 	
 	private void broadCastCommand(MiddlewarePacket packet)
 	{
