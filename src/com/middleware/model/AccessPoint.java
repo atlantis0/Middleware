@@ -15,7 +15,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 
 	private boolean monitor = true;
 	
-	protected RoutingTable table = null;
+	private RoutingTable table = null;
 	
 	private CreatePermanetAccessPoint createPermanetAccessPoint;
 	private TempAPToNew tempToNew;
@@ -84,7 +84,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	{
 		boolean change = false;
 		
-		Set<String> nodes = table.routingTable.keySet();
+		Set<String> nodes = table.getRoutingTable().keySet();
 		Iterator<String> iter = nodes.iterator();
 		
 		double max = -1;
@@ -100,7 +100,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		while(iter.hasNext())
 		{
 			node = iter.next();
-			NodeState nodeState = table.routingTable.get(node);
+			NodeState nodeState = table.getRoutingTable().get(node);
 			
 			battery = Double.parseDouble(nodeState.getBatteryLife());
 			processor = Double.parseDouble(nodeState.getProcessor());
@@ -148,7 +148,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	 */
 	private void checkNetworkStatus()
 	{
-		Set<String> nodes = table.routingTable.keySet();
+		Set<String> nodes = table.getRoutingTable().keySet();
 		
 		if(!nodes.isEmpty())
 		{
@@ -196,8 +196,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 					
 					broadCastCommand(packet);
 				}
-				
-				
+
 			}
 			catch(Exception e)
 			{
@@ -206,7 +205,6 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		}
 		
 	}
-	
 
 	private double evaluateNode(double battery, double processor, double memory)
 	{
@@ -221,7 +219,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	
 	private void broadCastCommand(MiddlewarePacket packet)
 	{
-		Set<String> nodes = table.routingTable.keySet();
+		Set<String> nodes = table.getRoutingTable().keySet();
 		Iterator<String> iter = nodes.iterator();
 		
 		String address[] = null;
@@ -305,7 +303,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.REQUEST_TABLE)))
 		{
-			if(this.table.routingTable.size() > 1)
+			if(this.table.getRoutingTable().size() > 1)
 			{
 				MiddlewarePacket packet = new MiddlewarePacket();
 				byte [] header_p = {(byte)Constants.TABLE_DATA};
@@ -314,7 +312,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 				 * Remove the senders address and 
 				 * send the rest
 				 */
-				HashMap<String, NodeState> temp = this.table.routingTable;
+				HashMap<String, NodeState> temp = this.table.getRoutingTable();
 				String id = address.toString().replace("/", "");
 				id = id + ":" +new Integer(port).toString();
 				temp.remove(id);
@@ -345,7 +343,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			//broadcast to the rest of the devices
 			//about the new access point
 			
-			Set<String> nodes = table.routingTable.keySet();
+			Set<String> nodes = table.getRoutingTable().keySet();
 			
 			Iterator<String> iter = nodes.iterator();
 			
@@ -389,6 +387,11 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
     public boolean getMonitor()
     {
     	return this.monitor;
+    }
+    
+    public RoutingTable getRoutingTable()
+    {
+    	return this.table;
     }
     
 	@Override

@@ -12,7 +12,7 @@ public class ChooseNode {
 	public String evaluate()
 	{
 		//the algorithm
-		Object keys[] = routingTable.routingTable.keySet().toArray();
+		Object keys[] = routingTable.getRoutingTable().keySet().toArray();
 		return (String)keys[0];
 	}
 }
