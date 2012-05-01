@@ -161,10 +161,10 @@ public class Node {
 	{
 		receiver.start();
 	}
-	
-	public void stopReceiverThread()
+
+	public void stop()
 	{
-		receiver.stop();
+		datagramSocket.close();
 	}
 	
 	public void sendData(MiddlewarePacket packet, Node node) throws IOException

@@ -28,6 +28,10 @@ public class Constants {
 	
 	
 	public static final int PING_TIMEOUT = 2000;
-	public static final int MONITOR_PERIOD = 15000;
+	public static final int MONITOR_PERIOD = 6000;
+	//this is partly provided be the SDK it self
+	//but applications may need to define this 
+	//or modify it according to their specific use
+	public static final long NETWORK_TERMINATE_TIMEOUT = 900000; //around 15 minutes
 	
 }

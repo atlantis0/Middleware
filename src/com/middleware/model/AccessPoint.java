@@ -24,7 +24,6 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	public AccessPoint(NodeState state, int port) throws SocketException {
 		
 		super(state, port);
-		//Log.d("better", "access point is listening...");
 		this.setNotifyAccessPoint(this);
 		table = new RoutingTable();
 		
@@ -102,17 +101,21 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			node = iter.next();
 			NodeState nodeState = table.getRoutingTable().get(node);
 			
-			battery = Double.parseDouble(nodeState.getBatteryLife());
-			processor = Double.parseDouble(nodeState.getProcessor());
-			memory = Double.parseDouble(nodeState.getMemory());
-			
-			compare = evaluateNode(battery, processor, memory);
-			
-			if(compare > max)
+			if(nodeState.canCreate())
 			{
-				max = compare;
-				nodeInfo = node.split(":");
+				battery = Double.parseDouble(nodeState.getBatteryLife());
+				processor = Double.parseDouble(nodeState.getProcessor());
+				memory = Double.parseDouble(nodeState.getMemory());
+				
+				compare = evaluateNode(battery, processor, memory);
+				
+				if(compare > max)
+				{
+					max = compare;
+					nodeInfo = node.split(":");
+				}
 			}
+			
 		}
 		
 		//include the access point itself
@@ -262,6 +265,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			
 			NodeState nodeState = new NodeState(nodeInfo[0], nodeInfo[2], nodeInfo[1]);
 			nodeState.setStatus(Boolean.valueOf(nodeInfo[3]));
+			nodeState.setCanCreate(Boolean.valueOf(nodeInfo[4]));
 			
 			String address_n = address.toString().substring(1, address.toString().length());
 			
@@ -303,7 +307,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.REQUEST_TABLE)))
 		{
-			if(this.table.getRoutingTable().size() > 1)
+			if(this.table.getRoutingTable().size() >= 1)
 			{
 				MiddlewarePacket packet = new MiddlewarePacket();
 				byte [] header_p = {(byte)Constants.TABLE_DATA};

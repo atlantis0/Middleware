@@ -7,6 +7,7 @@ public class NodeState {
 	private String processor = null;
 	
 	private boolean status = false;
+	private boolean canCreate = false;
 	
 	
 	public NodeState(String memory, String processor)
@@ -52,11 +53,22 @@ public class NodeState {
 		return this.status;
 	}
 	
+	public void setCanCreate(boolean canCreate)
+	{
+		this.canCreate = canCreate;
+	}
+	
+	public boolean canCreate()
+	{
+		return this.canCreate;
+	}
+	
 	@Override
 	public String toString()
 	{
 		Boolean y = this.status;
-		return this.memory + "," + this.batteryLife + "," + this.processor + "," + y.toString();
+		Boolean able = this.canCreate;
+		return this.memory + "," + this.batteryLife + "," + this.processor + "," + y.toString() + "," + able.toString();
 	}
 	
 }
