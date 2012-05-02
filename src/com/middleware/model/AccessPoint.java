@@ -1,5 +1,6 @@
 package com.middleware.model;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.HashMap;
@@ -21,7 +22,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	private TempAPToNew tempToNew;
 	private AddressTable addressTable;
 	
-	public AccessPoint(NodeState state, int port) throws SocketException {
+	public AccessPoint(NodeState state, int port) throws SocketException, IOException {
 		
 		super(state, port);
 		this.setNotifyAccessPoint(this);

@@ -1,9 +1,15 @@
 package com.middleware.model;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketException;
 
 import com.middleware.listeners.CreatePermanetAccessPoint;
@@ -12,14 +18,16 @@ import com.middleware.listeners.NotifyAccessPoint;
 
 public class Node {
 
+	private static final int BUFSIZE = 100000;
+	
 	private InetAddress address;
 	private int port = 0;
 	
 	protected int number = 0;
 	
 	protected NodeState nodeState;
-	protected DatagramSocket datagramSocket;
-	protected DatagramPacket inPacket, outPacket;
+	protected ServerSocket serverSocket;
+	protected Socket inSocket, outSocket;
 	protected byte[] buffer;
 	protected byte [] result;
 	
@@ -32,7 +40,7 @@ public class Node {
 	
 	boolean connected = false;
 	
-	public Node(int port) throws SocketException
+	public Node(int port) throws SocketException, IOException
 	{
 		this.port = port;
 		setUpNode();
@@ -44,17 +52,17 @@ public class Node {
 		this.address = address;
 	}
 
-	public Node(NodeState nodeState, int port) throws SocketException
+	public Node(NodeState nodeState, int port) throws SocketException, IOException
 	{
 		this.port = port;
 		this.nodeState = nodeState;
 		setUpNode();
 	}
 	
-	private void setUpNode() throws SocketException
+	private void setUpNode() throws SocketException, IOException
 	{
 		connected = true;
-		datagramSocket = new DatagramSocket(port);
+		serverSocket = new ServerSocket(port);
 		
 		//set up receiver
 		receiver = new Thread(new Runnable() {
@@ -65,19 +73,33 @@ public class Node {
 	        	{
 	        		do
 	        		{
-	        			//52k
-	        			buffer = new byte[52000];
-	    				inPacket = new DatagramPacket(buffer, buffer.length);
-	    				datagramSocket.receive(inPacket);
-	    				
-	    				result = new byte [inPacket.getLength()];
-	    				System.arraycopy(inPacket.getData() , 0 , result , 0 , inPacket.getLength());
-	    				
-	    				byte[] header = new byte[1];
-	    				header[0] = result[0];
-	    				
-	    		        String receivedHeader = new String(header);
-	    		        
+	        			String line = null;
+	        			StringBuilder builder = new StringBuilder();
+	        		
+	        			buffer = new byte[BUFSIZE];
+	        			inSocket = serverSocket.accept();
+	        			
+	        			SocketAddress clientAddress = inSocket.getRemoteSocketAddress();
+	        			System.out.println("Handling client at " + clientAddress);
+	        			
+	        			InputStream in = inSocket.getInputStream();
+
+	        			BufferedReader inReader = new BufferedReader(new InputStreamReader(in));
+	        			
+	        			while((line = inReader.readLine()) != null)
+	        			{
+	        				builder.append(line);
+	        			}
+	        			
+	        			result = builder.toString().getBytes();
+	        			char [] header = { builder.toString().charAt(0) };
+	        			
+	        			String receivedHeader = new String(header);
+	        			
+	        			inSocket.close();
+
+	        			InetSocketAddress inPacket = (InetSocketAddress)clientAddress;
+	        			
 	    				if(receivedHeader.equals(String.valueOf(Constants.CONNECTION_PROFILE)))
 	    				{
 	    					notifyAccessPoint.accessPointReceivedData(result, inPacket.getAddress(), inPacket.getPort());
@@ -131,8 +153,9 @@ public class Node {
 	        	{
 	        		ioEx.printStackTrace();
 	        		connected = false;
-	        		datagramSocket.close();
+	        		//serverSocket.close();
 	        	}
+				
 			}
 		});
 	}
@@ -162,17 +185,18 @@ public class Node {
 		receiver.start();
 	}
 
-	public void stop()
+	public void stop() throws IOException
 	{
-		datagramSocket.close();
+		serverSocket.close();
 	}
 	
 	public void sendData(MiddlewarePacket packet, Node node) throws IOException
 	{
 		if(connected)
 		{
-			outPacket = new DatagramPacket(packet.getMiddleWareData(), packet.getMiddleWareData().length, node.getAddress(), node.getPort()); 
-			datagramSocket.send(outPacket);
+			outSocket = new Socket(node.getAddress(), node.getPort()); 
+			OutputStream out = outSocket.getOutputStream();
+			out.write(packet.getMiddleWareData());
 		}
 	}
 	
@@ -180,8 +204,9 @@ public class Node {
 	{
 		if(connected)
 		{
-			outPacket = new DatagramPacket(packet.getMiddleWareData(), packet.getMiddleWareData().length, host, port); 
-			datagramSocket.send(outPacket);
+			outSocket = new Socket(host, port); 
+			OutputStream out = outSocket.getOutputStream();
+			out.write(packet.getMiddleWareData());
 		}
 	}
 	
