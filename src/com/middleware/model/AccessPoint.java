@@ -134,7 +134,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		else
 		{
 			change = true;
-			MiddlewarePacket packet = new MiddlewarePacket();
+			MiddlewarePacket packet = new MiddlewarePacket(Integer.parseInt(nodeInfo[1]));
 			byte [] header = {(byte)Constants.CREATE_PERMANENT_AP};
 			packet.setPacketData(header, "create_permanet_ap".getBytes());
 			this.sendData(packet, InetAddress.getByName(nodeInfo[0]), Integer.parseInt(nodeInfo[1]));
@@ -193,12 +193,8 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 				 * which is not available!
 				 */
 				if(count != 0)
-				{
-					MiddlewarePacket packet = new MiddlewarePacket();
-					byte [] header = {(byte)Constants.DISCONNECTED};
-					packet.setPacketData(header, unreachableAddresses.getBytes());
-					
-					broadCastCommand(packet);
+				{					
+					broadCastCommand(Constants.DISCONNECTED, unreachableAddresses.getBytes());
 				}
 
 			}
@@ -221,8 +217,8 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	}
 	
 	
-	private void broadCastCommand(MiddlewarePacket packet)
-	{
+	private void broadCastCommand(char command, byte[] data)
+	{	
 		Set<String> nodes = table.getRoutingTable().keySet();
 		Iterator<String> iter = nodes.iterator();
 		
@@ -235,6 +231,11 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			{
 				address = iter.next().split(":");
 				nodeAddress = InetAddress.getByName(address[0]);
+				
+				MiddlewarePacket packet = new MiddlewarePacket(new Integer(address[1]));
+				byte [] header = {(byte)command};
+				packet.setPacketData(header, data);
+				
 				this.sendData(packet, nodeAddress, new Integer(address[1]));
 			}
 			catch(Exception e)
@@ -281,10 +282,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			/*
 			 * to notify other clients
 			 */
-			MiddlewarePacket packet = new MiddlewarePacket();
-			byte [] packetHeader = {(byte)Constants.NEW_NODE};
-			packet.setPacketData(packetHeader, key.getBytes());
-			broadCastCommand(packet);
+			broadCastCommand(Constants.NEW_NODE, key.getBytes());
 
 			this.number++;
 			
@@ -295,10 +293,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			String key = address.toString().replace("/", "")+":"+String.valueOf(port);
 			this.removeNodeFromTable(key);
 			
-			MiddlewarePacket packet = new MiddlewarePacket();
-			byte [] packetHeader = {(byte)Constants.DISCONNECTED};
-			packet.setPacketData(packetHeader, key.getBytes());
-			broadCastCommand(packet);
+			broadCastCommand(Constants.DISCONNECTED, key.getBytes());
 		}
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.CREATE_PERMANENT_AP)))
@@ -310,9 +305,6 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		{
 			if(this.table.getRoutingTable().size() >= 1)
 			{
-				MiddlewarePacket packet = new MiddlewarePacket();
-				byte [] header_p = {(byte)Constants.TABLE_DATA};
-				
 				/*
 				 * Remove the senders address and 
 				 * send the rest
@@ -321,6 +313,9 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 				String id = address.toString().replace("/", "");
 				id = id + ":" +new Integer(port).toString();
 				temp.remove(id);
+				
+				MiddlewarePacket packet = new MiddlewarePacket(port);
+				byte [] header_p = {(byte)Constants.TABLE_DATA};
 				
 				packet.setPacketData(header_p, temp.keySet().toString().getBytes());
 				
@@ -360,14 +355,15 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 					String node = iter.next();
 					String[] nodeInfo = node.split(":");
 					
-					MiddlewarePacket packet = new MiddlewarePacket();
-					byte [] header_p = {(byte)Constants.CONNECT_TO_NEW_AP};
-					packet.setPacketData(header_p, receivedBody.getBytes());
-					
 					if(!(address.equals(InetAddress.getByName(nodeInfo[0]))))
-					{
+					{	
 						InetAddress host = InetAddress.getByName(nodeInfo[0]);
 						int port_p = Integer.parseInt(nodeInfo[1]);
+						
+						MiddlewarePacket packet = new MiddlewarePacket(port_p);
+						byte [] header_p = {(byte)Constants.CONNECT_TO_NEW_AP};
+						packet.setPacketData(header_p, receivedBody.getBytes());
+						
 						sendData(packet, host, port_p);
 						
 						Thread.sleep(1000);

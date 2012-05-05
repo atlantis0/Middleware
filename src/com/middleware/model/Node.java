@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -74,50 +75,57 @@ public class Node {
 	        		do
 	        		{
 	        			String line = null;
-	        			StringBuilder builder = new StringBuilder();
 	        		
 	        			buffer = new byte[BUFSIZE];
 	        			inSocket = serverSocket.accept();
 	        			
 	        			SocketAddress clientAddress = inSocket.getRemoteSocketAddress();
-	        			System.out.println("Handling client at " + clientAddress);
 	        			
 	        			InputStream in = inSocket.getInputStream();
 
 	        			BufferedReader inReader = new BufferedReader(new InputStreamReader(in));
+		
+	        			line = inReader.readLine().replace("\n", "");
+	        					
+	        			String header_data[] = line.toString().split(";");
+	        			String port = header_data[0].substring(1, header_data[0].length());
+	        			int inPacketPort = new Integer(port);
 	        			
-	        			while((line = inReader.readLine()) != null)
-	        			{
-	        				builder.append(line);
-	        			}
-	        			
-	        			result = builder.toString().getBytes();
-	        			char [] header = { builder.toString().charAt(0) };
+	        			char [] header = { header_data[0].toString().charAt(0) };
+	        			String result_to_pass = new String(header) + header_data[1];
+	        			result = result_to_pass.getBytes();
 	        			
 	        			String receivedHeader = new String(header);
 	        			
+	        			InetSocketAddress fromClient = (InetSocketAddress)clientAddress;
+	        			String full_address = fromClient.getAddress().toString();
+	        			
+	        			int t = full_address.indexOf("/");
+	        			full_address = full_address.subSequence(t+1, full_address.length()).toString();
+	        			
+	        			InetAddress inPacket = InetAddress.getAllByName(full_address)[0];
+	        			
+	        			
 	        			inSocket.close();
-
-	        			InetSocketAddress inPacket = (InetSocketAddress)clientAddress;
 	        			
 	    				if(receivedHeader.equals(String.valueOf(Constants.CONNECTION_PROFILE)))
 	    				{
-	    					notifyAccessPoint.accessPointReceivedData(result, inPacket.getAddress(), inPacket.getPort());
+	    					notifyAccessPoint.accessPointReceivedData(result, inPacket, inPacketPort);
 	    				}
 	    				if(receivedHeader.equals(String.valueOf(Constants.LEAVING)))
 	    				{
-	    					notifyAccessPoint.accessPointReceivedData(result, inPacket.getAddress(), inPacket.getPort());
+	    					notifyAccessPoint.accessPointReceivedData(result, inPacket, inPacketPort);
 	    				}
 	    				else if(receivedHeader.equals(String.valueOf(Constants.CREATE_PERMANENT_AP)))
 	    				{
-	    					createPermanetAccessPoint.accessPointCreated(true, address, port, number);
+	    					createPermanetAccessPoint.accessPointCreated(true, address, inPacketPort, number);
 	    				}
 	    				
 	    				else if(receivedHeader.equals(String.valueOf(Constants.PERMANENT_AP_CREATED)))
 	    				{
 	    					//inPacket.getAddress is the
 	    					//address of the new access point
-	    					notifyAccessPoint.accessPointReceivedData(result, inPacket.getAddress(), inPacket.getPort());
+	    					notifyAccessPoint.accessPointReceivedData(result, inPacket, inPacketPort);
 	    					//broadcast to the rest of the devices
 	    					//about the new access point
 	    				}
@@ -140,7 +148,7 @@ public class Node {
 	    				}
 	    				else if(receivedHeader.equals(String.valueOf(Constants.REQUEST_TABLE)))
 	    				{
-	    					notifyAccessPoint.accessPointReceivedData(result, inPacket.getAddress(), inPacket.getPort());
+	    					notifyAccessPoint.accessPointReceivedData(result, inPacket, inPacketPort);
 	    				}
 	    				
     					dataReceived.nodeReceivedData(result);
@@ -195,8 +203,8 @@ public class Node {
 		if(connected)
 		{
 			outSocket = new Socket(node.getAddress(), node.getPort()); 
-			OutputStream out = outSocket.getOutputStream();
-			out.write(packet.getMiddleWareData());
+			OutputStreamWriter out = new OutputStreamWriter(outSocket.getOutputStream(), "UTF-8");
+			out.write(packet.getMiddleWareData(), 0, packet.getMiddleWareData().length);
 		}
 	}
 	
