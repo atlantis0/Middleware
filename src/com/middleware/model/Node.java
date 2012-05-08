@@ -93,17 +93,22 @@ public class Node {
 	        				count++;
 	        			}
 	        			
-	        			byte real_buffer[] = new byte[count];
-	        			System.arraycopy(buffer, 0, real_buffer, 0, count);
+	        			header[0] = (char)buffer[0];
+	        			byte port_byte[] = new byte[4];
 	        			
-	        			header[0] = (char)real_buffer[0];
+	        			for(int i=0; i<4; i++)
+	        			{
+	        				int data_at = i+1;
+	        				port_byte[i] = buffer[data_at+1];
+	        			}
 	        			
-	        			String whole_response = new String(real_buffer, "ISO-8859-1");
-	        			int inPacketPort = new Integer(whole_response.substring(1, 5));
-	        			 
-	        			String result_to_return = whole_response.charAt(0) + whole_response.substring(5, whole_response.length());
-	        			result = result_to_return.getBytes("ISO-8859-1");
+	        			String port = new String(port_byte, "ISO-8859-1");
+	        			int inPacketPort = new Integer(port);
 	        			
+	        			result = new byte[count-6];
+	        			result[0] = buffer[0];
+	        			System.arraycopy(buffer, 7, result, 1, result.length -1);
+	        		
 	        			String receivedHeader = new String(header);
 	        			
 	        			InetSocketAddress fromClient = (InetSocketAddress)clientAddress;
@@ -115,6 +120,7 @@ public class Node {
 	        			InetAddress inPacket = InetAddress.getAllByName(full_address)[0];
 	        			
 	        			inSocket.close();
+	        			
 	        			
 	    				if(receivedHeader.equals(String.valueOf(Constants.CONNECTION_PROFILE)))
 	    				{

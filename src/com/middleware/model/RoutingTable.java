@@ -11,7 +11,7 @@ public class RoutingTable {
 		routingTable = new HashMap<String, NodeState>();
 	}
 	
-	public synchronized HashMap<String, NodeState> getRoutingTable()
+	public synchronized HashMap<String, NodeState> getTable()
 	{
 		return routingTable;
 	}

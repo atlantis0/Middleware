@@ -2,6 +2,7 @@ package com.middleware.model;
 
 public class MiddlewarePacket {
 
+	private final byte[] delimiter = { -1 };
 	private byte[] header;
 	private byte[] data;
 	private byte[] full_data;
@@ -25,11 +26,13 @@ public class MiddlewarePacket {
 		
 		this.data = data;
 
-		full_data = new byte[header.length + data_prefix.length + data.length];
+		full_data = new byte[header.length + delimiter.length + data_prefix.length + delimiter.length + data.length];
 		
 		System.arraycopy(this.header, 0, full_data, 0, header.length);
-		System.arraycopy(data_prefix, 0, full_data, header.length, data_prefix.length);
-		System.arraycopy(this.data, 0, full_data, header.length + data_prefix.length, data.length);
+		System.arraycopy(this.delimiter, 0, full_data, header.length, delimiter.length);
+		System.arraycopy(data_prefix, 0, full_data, header.length + delimiter.length, data_prefix.length);
+		System.arraycopy(this.delimiter, 0, full_data, header.length + delimiter.length + data_prefix.length, delimiter.length);
+		System.arraycopy(this.data, 0, full_data, header.length + delimiter.length + data_prefix.length + delimiter.length, data.length);
 	}
 	
 	

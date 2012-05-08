@@ -84,7 +84,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	{
 		boolean change = false;
 		
-		Set<String> nodes = table.getRoutingTable().keySet();
+		Set<String> nodes = table.getTable().keySet();
 		Iterator<String> iter = nodes.iterator();
 		
 		double max = -1;
@@ -100,7 +100,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		while(iter.hasNext())
 		{
 			node = iter.next();
-			NodeState nodeState = table.getRoutingTable().get(node);
+			NodeState nodeState = table.getTable().get(node);
 			
 			if(nodeState.canCreate())
 			{
@@ -152,7 +152,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	 */
 	private void checkNetworkStatus()
 	{
-		Set<String> nodes = table.getRoutingTable().keySet();
+		Set<String> nodes = table.getTable().keySet();
 		
 		if(!nodes.isEmpty())
 		{
@@ -219,7 +219,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	
 	private void broadCastCommand(char command, byte[] data)
 	{	
-		Set<String> nodes = table.getRoutingTable().keySet();
+		Set<String> nodes = table.getTable().keySet();
 		Iterator<String> iter = nodes.iterator();
 		
 		String address[] = null;
@@ -245,7 +245,8 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		}
 	}
 	
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
 	public void accessPointReceivedData(byte[] data, final InetAddress address, int port) {
 		
 		byte[] header = new byte[1];
@@ -303,13 +304,13 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.REQUEST_TABLE)))
 		{
-			if(this.table.getRoutingTable().size() >= 1)
+			if(this.table.getTable().size() >= 1)
 			{
 				/*
 				 * Remove the senders address and 
 				 * send the rest
 				 */
-				HashMap<String, NodeState> temp = this.table.getRoutingTable();
+				HashMap<String, NodeState> temp = (HashMap<String, NodeState>)this.table.getTable().clone();
 				String id = address.toString().replace("/", "");
 				id = id + ":" +new Integer(port).toString();
 				temp.remove(id);
@@ -343,7 +344,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			//broadcast to the rest of the devices
 			//about the new access point
 			
-			Set<String> nodes = table.getRoutingTable().keySet();
+			Set<String> nodes = table.getTable().keySet();
 			
 			Iterator<String> iter = nodes.iterator();
 			
