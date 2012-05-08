@@ -19,7 +19,7 @@ import com.middleware.listeners.NotifyAccessPoint;
 
 public class Node {
 
-	private static final int BUFSIZE = 100000;
+	private static final int BUFSIZE = 500000;
 	
 	private InetAddress address;
 	private int port = 0;
@@ -74,8 +74,7 @@ public class Node {
 	        	{
 	        		do
 	        		{
-	        			String line = null;
-	        		
+	        			char [] header = new char[1];
 	        			buffer = new byte[BUFSIZE];
 	        			inSocket = serverSocket.accept();
 	        			
@@ -83,17 +82,27 @@ public class Node {
 	        			
 	        			InputStream in = inSocket.getInputStream();
 
-	        			BufferedReader inReader = new BufferedReader(new InputStreamReader(in));
-		
-	        			line = inReader.readLine().replace("\n", "");
-	        					
-	        			String header_data[] = line.toString().split(";");
-	        			String port = header_data[0].substring(1, header_data[0].length());
-	        			int inPacketPort = new Integer(port);
+	        			BufferedReader inReader = new BufferedReader(new InputStreamReader(in, "ISO-8859-1"));
 	        			
-	        			char [] header = { header_data[0].toString().charAt(0) };
-	        			String result_to_pass = new String(header) + header_data[1];
-	        			result = result_to_pass.getBytes();
+	        			int end= 0;
+	        			int count = 0;
+
+	        			while((end = inReader.read()) != -1)
+	        			{
+	        				buffer[count] = (byte)end;
+	        				count++;
+	        			}
+	        			
+	        			byte real_buffer[] = new byte[count];
+	        			System.arraycopy(buffer, 0, real_buffer, 0, count);
+	        			
+	        			header[0] = (char)real_buffer[0];
+	        			
+	        			String whole_response = new String(real_buffer, "ISO-8859-1");
+	        			int inPacketPort = new Integer(whole_response.substring(1, 5));
+	        			 
+	        			String result_to_return = whole_response.charAt(0) + whole_response.substring(5, whole_response.length());
+	        			result = result_to_return.getBytes("ISO-8859-1");
 	        			
 	        			String receivedHeader = new String(header);
 	        			
@@ -104,7 +113,6 @@ public class Node {
 	        			full_address = full_address.subSequence(t+1, full_address.length()).toString();
 	        			
 	        			InetAddress inPacket = InetAddress.getAllByName(full_address)[0];
-	        			
 	        			
 	        			inSocket.close();
 	        			
@@ -203,8 +211,11 @@ public class Node {
 		if(connected)
 		{
 			outSocket = new Socket(node.getAddress(), node.getPort()); 
-			OutputStreamWriter out = new OutputStreamWriter(outSocket.getOutputStream(), "UTF-8");
-			out.write(packet.getMiddleWareData(), 0, packet.getMiddleWareData().length);
+			OutputStream out = outSocket.getOutputStream();
+			OutputStreamWriter writer = new OutputStreamWriter(out, "ISO-8859-1");
+			char input[] = byteToChar(packet.getMiddleWareData());
+			writer.write(input, 0, input.length);
+			writer.append("\n");
 		}
 	}
 	
@@ -215,7 +226,21 @@ public class Node {
 			outSocket = new Socket(host, port); 
 			OutputStream out = outSocket.getOutputStream();
 			out.write(packet.getMiddleWareData());
+			out.close();
+			outSocket.close();
 		}
+	}
+	
+	private char[] byteToChar(byte[] input)
+	{
+		char charToReturn[] = new char[input.length];
+		
+		for(int i=0; i<input.length; i++)
+		{
+			charToReturn[i] = (char)input[i];
+		}
+		
+		return charToReturn;
 	}
 	
 	public void setNodeState(NodeState nodeState)
