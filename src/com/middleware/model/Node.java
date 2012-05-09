@@ -220,6 +220,7 @@ public class Node {
 			out.write(packet.getMiddleWareData());
 			out.close();
 			outSocket.close();
+			//with mac
 		}
 	}
 	
