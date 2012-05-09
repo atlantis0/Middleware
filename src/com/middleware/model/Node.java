@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -212,20 +211,19 @@ public class Node {
 		serverSocket.close();
 	}
 	
-	public void sendData(MiddlewarePacket packet, Node node) throws IOException
+	public synchronized void sendData(MiddlewarePacket packet, Node node) throws IOException
 	{
 		if(connected)
 		{
 			outSocket = new Socket(node.getAddress(), node.getPort()); 
 			OutputStream out = outSocket.getOutputStream();
-			OutputStreamWriter writer = new OutputStreamWriter(out, "ISO-8859-1");
-			char input[] = byteToChar(packet.getMiddleWareData());
-			writer.write(input, 0, input.length);
-			writer.append("\n");
+			out.write(packet.getMiddleWareData());
+			out.close();
+			outSocket.close();
 		}
 	}
 	
-	public void sendData(MiddlewarePacket packet, InetAddress host, int port) throws IOException
+	public synchronized void sendData(MiddlewarePacket packet, InetAddress host, int port) throws IOException
 	{
 		if(connected)
 		{
@@ -235,18 +233,6 @@ public class Node {
 			out.close();
 			outSocket.close();
 		}
-	}
-	
-	private char[] byteToChar(byte[] input)
-	{
-		char charToReturn[] = new char[input.length];
-		
-		for(int i=0; i<input.length; i++)
-		{
-			charToReturn[i] = (char)input[i];
-		}
-		
-		return charToReturn;
 	}
 	
 	public void setNodeState(NodeState nodeState)

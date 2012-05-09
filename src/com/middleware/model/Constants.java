@@ -1,6 +1,5 @@
 package com.middleware.model;
 
-
 public class Constants {
 	
 	public static final char CONNECTION_PROFILE = 'A';
@@ -28,7 +27,7 @@ public class Constants {
 	
 	
 	public static final int PING_TIMEOUT = 2000;
-	public static final int MONITOR_PERIOD = 6000;
+	public static final int MONITOR_PERIOD = 15000;
 	//this is partly provided be the SDK it self
 	//but applications may need to define this 
 	//or modify it according to their specific use
