@@ -18,7 +18,7 @@ import com.middleware.listeners.NotifyAccessPoint;
 
 public class Node {
 
-	private static final int BUFSIZE = 500000;
+	private static final int BUFSIZE = 5000000;
 	
 	private InetAddress address;
 	private int port = 0;

@@ -15,7 +15,7 @@ public class Constants {
 
 	
 	public static final int TEMP_AP_PORT = 4444;
-	public static final int PERMANET_AP_PORT = 3333;
+	public static final int PERMANET_AP_PORT = 4444;
 	
 	
 	public static final int MIN_BATTERY = 0;

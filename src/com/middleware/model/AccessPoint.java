@@ -80,11 +80,12 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		this.addressTable = addressTable;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public boolean choosePermanetAccessPoint() throws Exception
 	{
 		boolean change = false;
-		
-		Set<String> nodes = table.getTable().keySet();
+		HashMap<String, NodeState> temp = (HashMap<String, NodeState>)this.table.getTable().clone();
+		Set<String> nodes = temp.keySet();
 		Iterator<String> iter = nodes.iterator();
 		
 		double max = -1;
@@ -100,7 +101,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		while(iter.hasNext())
 		{
 			node = iter.next();
-			NodeState nodeState = table.getTable().get(node);
+			NodeState nodeState = temp.get(node);
 			
 			if(nodeState.canCreate())
 			{
@@ -150,9 +151,12 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	 * Create A thread on node initialization and call this method 
 	 * according to the time constant.
 	 */
+	
+	@SuppressWarnings("unchecked")
 	private void checkNetworkStatus()
 	{
-		Set<String> nodes = table.getTable().keySet();
+		HashMap<String, NodeState> temp = (HashMap<String, NodeState>)this.table.getTable().clone();
+		Set<String> nodes = temp.keySet();
 		
 		if(!nodes.isEmpty())
 		{
@@ -217,9 +221,11 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	private void broadCastCommand(char command, byte[] data)
 	{	
-		Set<String> nodes = table.getTable().keySet();
+		HashMap<String, NodeState> temp = (HashMap<String, NodeState>)this.table.getTable().clone();
+		Set<String> nodes = temp.keySet();
 		Iterator<String> iter = nodes.iterator();
 		
 		String address[] = null;
