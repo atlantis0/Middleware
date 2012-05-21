@@ -1,9 +1,7 @@
 package com.middleware.model;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -17,8 +15,6 @@ import com.middleware.listeners.NewAccessPoint;
 import com.middleware.listeners.NotifyAccessPoint;
 
 public class Node {
-
-	private static final int BUFSIZE = 5000000;
 	
 	private InetAddress address;
 	private int port = 0;
@@ -74,23 +70,14 @@ public class Node {
 	        		do
 	        		{
 	        			char [] header = new char[1];
-	        			buffer = new byte[BUFSIZE];
+	        			buffer = null;
 	        			inSocket = serverSocket.accept();
 	        			
 	        			SocketAddress clientAddress = inSocket.getRemoteSocketAddress();
 	        			
 	        			InputStream in = inSocket.getInputStream();
 
-	        			BufferedReader inReader = new BufferedReader(new InputStreamReader(in, "ISO-8859-1"));
-	        			
-	        			int end= 0;
-	        			int count = 0;
-
-	        			while((end = inReader.read()) != -1)
-	        			{
-	        				buffer[count] = (byte)end;
-	        				count++;
-	        			}
+	        			buffer = org.apache.commons.io.IOUtils.toByteArray(in);
 	        			
 	        			header[0] = (char)buffer[0];
 	        			byte port_byte[] = new byte[4];
@@ -104,7 +91,7 @@ public class Node {
 	        			String port = new String(port_byte, "ISO-8859-1");
 	        			int inPacketPort = new Integer(port);
 	        			
-	        			result = new byte[count-6];
+	        			result = new byte[buffer.length-6];
 	        			result[0] = buffer[0];
 	        			System.arraycopy(buffer, 7, result, 1, result.length -1);
 	        		
