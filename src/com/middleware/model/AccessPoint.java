@@ -198,7 +198,7 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 				 */
 				if(count != 0)
 				{					
-					broadCastCommand(Constants.DISCONNECTED, unreachableAddresses.getBytes());
+					broadCastCommand(Constants.DISCONNECTED, unreachableAddresses.getBytes(), temp);
 				}
 
 			}
@@ -221,11 +221,9 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 	}
 	
 	
-	@SuppressWarnings("unchecked")
-	private void broadCastCommand(char command, byte[] data)
+	private void broadCastCommand(char command, byte[] data, HashMap<String, NodeState> table)
 	{	
-		HashMap<String, NodeState> temp = (HashMap<String, NodeState>)this.table.getTable().clone();
-		Set<String> nodes = temp.keySet();
+		Set<String> nodes = table.keySet();
 		Iterator<String> iter = nodes.iterator();
 		
 		String address[] = null;
@@ -286,10 +284,20 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			 * Listener for the access point activity
 			 */
 			this.addressTable.nodeAdded(node);
+
+			
 			/*
 			 * to notify other clients
+			 * Remove the senders address and 
+			 * send the rest
 			 */
-			broadCastCommand(Constants.NEW_NODE, key.getBytes());
+			HashMap<String, NodeState> temp = (HashMap<String, NodeState>)this.table.getTable().clone();
+			String id = address.toString().replace("/", "");
+			id = id + ":" +new Integer(port).toString();
+			temp.remove(id);
+			
+			broadCastCommand(Constants.NEW_NODE, key.getBytes(), temp);
+			
 
 			this.number++;
 			
@@ -300,7 +308,12 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			String key = address.toString().replace("/", "")+":"+String.valueOf(port);
 			this.removeNodeFromTable(key);
 			
-			broadCastCommand(Constants.DISCONNECTED, key.getBytes());
+			HashMap<String, NodeState> temp = (HashMap<String, NodeState>)this.table.getTable().clone();
+			String id = address.toString().replace("/", "");
+			id = id + ":" +new Integer(port).toString();
+			temp.remove(id);
+			
+			broadCastCommand(Constants.DISCONNECTED, key.getBytes(), temp);
 		}
 		
 		else if(receivedHeader.equals(String.valueOf(Constants.CREATE_PERMANENT_AP)))
