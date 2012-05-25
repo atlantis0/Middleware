@@ -292,11 +292,12 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			 * send the rest
 			 */
 			HashMap<String, NodeState> temp = (HashMap<String, NodeState>)this.table.getTable().clone();
-			String id = address.toString().replace("/", "");
-			id = id + ":" +new Integer(port).toString();
-			temp.remove(id);
+
+			//String id = address.toString().replace("/", "");
+			//id = id + ":" +new Integer(port).toString();
+			//temp.remove(id);
 			
-			broadCastCommand(Constants.NEW_NODE, key.getBytes(), temp);
+			broadCastCommand(Constants.NEW_NODE, temp.toString().getBytes(), temp);
 			
 
 			this.number++;
