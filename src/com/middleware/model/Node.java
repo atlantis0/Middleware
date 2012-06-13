@@ -69,9 +69,13 @@ public class Node {
 	        	{
 	        		do
 	        		{
+	        			long begin, end;
+	        			
 	        			char [] header = new char[1];
 	        			buffer = null;
 	        			inSocket = serverSocket.accept();
+	        			
+	        			begin = System.nanoTime();
 	        			
 	        			SocketAddress clientAddress = inSocket.getRemoteSocketAddress();
 	        			
@@ -107,12 +111,21 @@ public class Node {
 	        			
 	        			inSocket.close();
 	        			
+	        			end = System.nanoTime();
+	        			
+	        			if(receivedHeader.equals(String.valueOf(Constants.DATA)))
+	        			{
+	        				System.out.print("packet decode time ... " + String.valueOf(end-begin) + "\n");
+	        			}
+	        			
+	        			
+	        			begin = System.nanoTime();
 	        			
 	    				if(receivedHeader.equals(String.valueOf(Constants.CONNECTION_PROFILE)))
 	    				{
 	    					notifyAccessPoint.accessPointReceivedData(result, inPacket, inPacketPort);
 	    				}
-	    				if(receivedHeader.equals(String.valueOf(Constants.LEAVING)))
+	    				else if(receivedHeader.equals(String.valueOf(Constants.LEAVING)))
 	    				{
 	    					notifyAccessPoint.accessPointReceivedData(result, inPacket, inPacketPort);
 	    				}
@@ -151,6 +164,13 @@ public class Node {
 	    					notifyAccessPoint.accessPointReceivedData(result, inPacket, inPacketPort);
 	    				}
 	    				
+	    				end = System.nanoTime();
+	    				
+	        			if(receivedHeader.equals(String.valueOf(Constants.DATA)))
+	        			{
+	        				System.out.print("header conditions ... " + String.valueOf(end-begin) + "\n");
+	        			}
+
     					dataReceived.nodeReceivedData(result);
 	    				
 	        		}

@@ -249,6 +249,42 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
+	private void broadCastCommandExcludingSender(char command, byte[] data, HashMap<String, NodeState> table)
+	{	
+		Set<String> nodes = table.keySet();
+		Iterator<String> iter = nodes.iterator();
+		
+		String address[] = null;
+		InetAddress nodeAddress = null;
+		
+		HashMap<String, NodeState> modify;
+		
+		while(iter.hasNext())
+		{
+			try
+			{
+				String select = iter.next();
+				address = select.split(":");
+				nodeAddress = InetAddress.getByName(address[0]);
+				
+				MiddlewarePacket packet = new MiddlewarePacket(new Integer(address[1]));
+				byte [] header = {(byte)command};
+				
+				modify = (HashMap<String, NodeState>) table.clone();
+				modify.remove(select);
+
+				packet.setPacketData(header, modify.keySet().toString().getBytes());
+				this.sendData(packet, nodeAddress, new Integer(address[1]));
+				
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+	}
+	
     @SuppressWarnings("unchecked")
 	@Override
 	public void accessPointReceivedData(byte[] data, final InetAddress address, int port) {
@@ -288,16 +324,10 @@ public class AccessPoint extends Node implements NotifyAccessPoint{
 			
 			/*
 			 * to notify other clients
-			 * Remove the senders address and 
-			 * send the rest
 			 */
 			HashMap<String, NodeState> temp = (HashMap<String, NodeState>)this.table.getTable().clone();
-
-			//String id = address.toString().replace("/", "");
-			//id = id + ":" +new Integer(port).toString();
-			//temp.remove(id);
 			
-			broadCastCommand(Constants.NEW_NODE, temp.toString().getBytes(), temp);
+			broadCastCommandExcludingSender(Constants.NEW_NODE, temp.keySet().toString().getBytes(), temp);
 			
 
 			this.number++;
